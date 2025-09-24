@@ -1,0 +1,134 @@
+Persona: Você é um desenvolvedor Sênior Full-Stack, especialista em Laravel 11, Vue.js e Tailwind CSS. Sua tarefa é gerar o código completo para uma aplicação web segura e performática.
+
+Objetivo Principal: Gerar o código-fonte completo para uma aplicação web de votação de fotos para uma organização militar. A autenticação de usuários deve ser feita exclusivamente pelo número de registro militar (SARAM), e a aplicação deve seguir rigorosamente as regras de negócio e requisitos de segurança descritos abaixo.
+
+Estrutura da Aplicação e Requisitos Técnicos
+1. Stack Tecnológica:
+
+Backend: PHP 8.3 com Laravel 11.
+
+Frontend: Laravel Blade com componentes Vue.js 3 para interatividade dinâmica (como a galeria de votação) e Tailwind CSS para estilização.
+
+Banco de Dados: MySQL 8 ou PostgreSQL 15.
+
+Autenticação: Utilize o Laravel Breeze ou Jetstream como base, mas modifique-o para usar o campo saram em vez de email para login.
+
+2. Modelo de Dados (Schema do Banco de Dados):
+Gere as migrations do Laravel para as seguintes tabelas:
+
+users:
+
+id (PK)
+
+name (string)
+
+saram (string, unique) - Este é o campo de login.
+
+password (string, hashed)
+
+role (enum: 'admin', 'voter'), default 'voter'.
+
+timestamps
+
+projects:
+
+id (PK)
+
+name (string, unique)
+
+description (text, nullable)
+
+is_active (boolean), default true.
+
+timestamps
+
+photos:
+
+id (PK)
+
+project_id (foreign key para projects.id)
+
+file_path (string) - Caminho para a imagem armazenada.
+
+caption (string, nullable)
+
+timestamps
+
+votes:
+
+id (PK)
+
+user_id (foreign key para users.id)
+
+photo_id (foreign key para photos.id)
+
+Constraint: Chave única composta (user_id, photo_id) para garantir que um usuário não vote na mesma foto mais de uma vez.
+
+timestamps
+
+3. Funcionalidades e Lógica de Negócio:
+
+A. Autenticação e Perfis de Acesso (Roles):
+
+Admin: Acesso total. Pode gerenciar projetos, fazer upload de fotos, visualizar o dashboard de votação em tempo real e gerenciar usuários.
+
+Voter: Acesso restrito. Pode fazer login, visualizar a página de votação, votar uma única vez e ver uma página de confirmação após o voto. Não pode ver os resultados.
+
+B. Painel do Administrador (Rotas protegidas pelo middleware auth e role:admin):
+
+Dashboard: Uma view principal que exibe um ranking em tempo real das fotos mais votadas, atualizado dinamicamente.
+
+Gerenciamento de Projetos: CRUD completo para projects.
+
+Gerenciamento de Fotos:
+
+Interface para upload de múltiplas fotos para um projeto específico.
+
+As fotos devem ser armazenadas em storage/app/public/photos e acessíveis via link simbólico.
+
+Permitir a exclusão de fotos.
+
+C. Fluxo de Votação do Usuário (Rotas protegidas pelo middleware auth e role:voter):
+
+Página de Votação:
+
+Exibir todas as fotos de todos os projetos ativos, agrupadas por projeto.
+
+A interface deve ser uma galeria de imagens clicáveis.
+
+Um contador visual deve mostrar ao usuário quantas fotos já selecionou (ex: "3/10 selecionadas").
+
+Lógica de Votação (Controller):
+
+O usuário deve selecionar exatamente 10 fotos no total.
+
+Regra de Validação Crítica: O usuário deve selecionar pelo menos uma foto de cada projeto ativo.
+
+Ao submeter, o sistema deve:
+
+Verificar se o usuário já votou. Se sim, retornar um erro.
+
+Validar as regras (10 fotos no total e 1 por projeto).
+
+Salvar os 10 registros na tabela votes.
+
+Redirecionar para uma página de "Voto Computado com Sucesso".
+
+Pós-Votação: Uma vez que o usuário tenha votado, a página de votação deve se tornar inacessível, mostrando apenas a mensagem de confirmação.
+
+4. Estrutura do Código:
+Por favor, gere o código completo, incluindo:
+
+Arquivos de Migration para criar as tabelas.
+
+Modelos Eloquent (Models) com os relacionamentos definidos (User, Project, Photo, Vote).
+
+Controllers com toda a lógica de negócio (LoginController, Admin/ProjectController, Admin/PhotoController, VotingController, Admin/DashboardController).
+
+Arquivos de Rotas (web.php) com os middlewares de proteção adequados.
+
+Views em Blade (.blade.php) com estilização Tailwind CSS.
+
+Componentes Vue.js para a galeria de votação interativa e para o dashboard de resultados em tempo real do admin.
+
+Por favor, siga as melhores práticas do Laravel, como o uso de Form Requests para validação e organização do código de forma limpa e modular.

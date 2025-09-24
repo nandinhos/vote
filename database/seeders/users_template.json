@@ -1,0 +1,32 @@
+[
+  {
+    "name": "João Silva Santos",
+    "saram": "123456",
+    "password": "senha123",
+    "role": "voter"
+  },
+  {
+    "name": "Maria Oliveira Costa",
+    "saram": "234567",
+    "password": "senha456",
+    "role": "voter"
+  },
+  {
+    "name": "Carlos Eduardo Lima",
+    "saram": "345678",
+    "password": "senha789",
+    "role": "admin"
+  },
+  {
+    "name": "Ana Paula Ferreira",
+    "saram": "456789",
+    "password": "senha012",
+    "role": "voter"
+  },
+  {
+    "name": "Roberto Almeida Souza",
+    "saram": "567890",
+    "password": "senha345",
+    "role": "voter"
+  }
+]
