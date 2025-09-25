@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Página inicial - redireciona baseado no role se autenticado
+// Página inicial - redireciona baseado no role se autenticado, senão vai para login
 Route::get('/', function () {
     if (Auth::check()) {
         /** @var User $user */
@@ -23,12 +23,7 @@ Route::get('/', function () {
         return redirect()->route('voting.index');
     }
 
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return redirect()->route('login');
 });
 
 // Dashboard padrão do Laravel Breeze - redireciona baseado no role

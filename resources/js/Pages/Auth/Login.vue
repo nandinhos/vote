@@ -31,68 +31,57 @@ const submit = () => {
 
 <template>
     <GuestLayout>
+
         <Head title="Entrar" />
 
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="space-y-4">
             <div>
-                <InputLabel for="saram" value="SARAM" />
-
-                <TextInput
-                    id="saram"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.saram"
-                    required
+                <InputLabel for="saram" value="Saram" />
+                <TextInput 
+                    id="saram" 
+                    type="text" 
+                    class="mt-1" 
+                    v-model="form.saram" 
+                    required 
                     autofocus
-                    autocomplete="username"
-                    placeholder="Digite seu SARAM"
+                    autocomplete="username" 
+                    placeholder="Digite seu saram"
+                    icon="saram"
                 />
-
-                <InputError class="mt-2" :message="form.errors.saram" />
+                <InputError class="mt-1" :message="form.errors.saram" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Senha" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
+            <div>
+                <InputLabel for="password" value="Password" />
+                <TextInput 
+                    id="password" 
+                    type="password" 
+                    class="mt-1" 
+                    v-model="form.password" 
                     required
-                    autocomplete="current-password"
+                    autocomplete="current-password" 
+                    placeholder="••••••••"
+                    icon="password"
                 />
-
-                <InputError class="mt-2" :message="form.errors.password" />
+                <InputError class="mt-1" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
+            <div class="flex items-center py-1">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Lembrar de mim</span
-                    >
+                    <span class="ms-2 text-sm text-gray-600">Lembrar de mim</span>
                 </label>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Esqueceu sua senha?
-                </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
+            <div class="pt-1">
+                <PrimaryButton class="w-full" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1"></path>
+                    </svg>
                     Entrar
                 </PrimaryButton>
             </div>

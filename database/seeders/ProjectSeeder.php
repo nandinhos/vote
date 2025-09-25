@@ -101,5 +101,15 @@ class ProjectSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        // C-95
+        Project::firstOrCreate(
+            ['name' => 'C-95'],
+            [
+                'name' => 'C-95',
+                'description' => 'Aeronave de Transporte Tático/Logístico',
+                'is_active' => true,
+            ]
+        );
     }
 }

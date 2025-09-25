@@ -263,38 +263,72 @@
                                     </div>
                                     <h3 class="text-xl font-bold text-gray-900">🏆 Hall das 10 Mais Votadas</h3>
                                 </div>
-                                <div class="space-y-3">
+                                <div class="space-y-2">
                                     <Link v-for="(photo, index) in topPhotos" :key="photo.id"
                                         :href="route('admin.photos.show', photo.id)"
-                                        class="block p-4 rounded-xl bg-white/80 hover:bg-white transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md">
-                                    <div class="flex items-center space-x-4 ml-3">
-                                        <!-- Posição e Imagem -->
-                                        <div class="flex-shrink-0 relative">
-                                            <img :src="`/storage/${photo.file_path}`" :alt="photo.caption"
-                                                class="w-20 h-16 object-cover rounded-lg">
-                                            <div class="absolute -top-2 -left-2 bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg">
-                                                {{ index + 1 }}
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Informações -->
-                                        <div class="flex-1 min-w-0">
-                                            <h4 class="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-blue-600 transition-colors"
-                                                v-html="photo.caption || 'Sem legenda'"></h4>
-                                            <p class="text-xs text-gray-600 mt-1">{{ photo.project.name }}</p>
-                                            <div class="flex items-center mt-2">
-                                                <svg class="w-4 h-4 text-yellow-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        class="block rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md border border-yellow-200/50">
+                                    <div class="flex items-center px-4 py-3">
+                                        <!-- Posição/Ranking -->
+                                        <div class="flex-shrink-0 w-12 flex justify-center">
+                                            <div v-if="index < 3" class="w-8 h-8 flex items-center justify-center">
+                                                <svg v-if="index === 0" class="w-8 h-8 text-yellow-500"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                 </svg>
-                                                <span class="text-sm font-medium text-gray-700">{{ photo.votes_count }}</span>
+                                                <svg v-else-if="index === 1" class="w-8 h-8 text-gray-400"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                </svg>
+                                                <svg v-else-if="index === 2" class="w-8 h-8 text-amber-600"
+                                                    fill="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                </svg>
+                                            </div>
+                                            <div v-else
+                                                class="w-8 h-8 bg-gradient-to-br from-amber-100 to-yellow-100 border-2 border-yellow-300 rounded-full flex items-center justify-center">
+                                                <span class="text-sm font-bold text-amber-700">{{ index + 1 }}</span>
                                             </div>
                                         </div>
-                                        
+
+                                        <!-- Avatar/Imagem -->
+                                        <div class="flex-shrink-0 mx-4">
+                                            <div
+                                                class="w-20 h-20 rounded-3xl overflow-hidden border-2 border-yellow-300 shadow-sm">
+                                                <img :src="`/storage/${photo.file_path}`" :alt="photo.caption"
+                                                    class="w-full h-full object-cover">
+                                            </div>
+                                        </div>
+
+                                        <!-- Informações -->
+                                        <div class="flex-1 min-w-0 mr-4">
+                                            <h4 class="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-amber-700 transition-colors"
+                                                v-html="photo.caption || 'Sem legenda'"></h4>
+                                            <p class="text-xs text-gray-600 mt-0.5">{{ photo.project.name }}</p>
+                                        </div>
+
+                                        <!-- Pontuação/Votos -->
+                                        <div class="flex-shrink-0 flex items-center mr-4">
+                                            <svg class="w-4 h-4 text-yellow-500 mr-1" fill="currentColor"
+                                                viewBox="0 0 20 20">
+                                                <path
+                                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z">
+                                                </path>
+                                            </svg>
+                                            <span class="text-sm font-bold text-amber-700">{{ photo.votes_count
+                                            }}</span>
+                                        </div>
+
                                         <!-- Sinalização de Item Clicável -->
                                         <div class="flex-shrink-0">
-                                            <div class="w-8 h-8 bg-yellow-50 group-hover:bg-yellow-100 rounded-full flex items-center justify-center transition-all duration-200">
-                                                <svg class="w-5 h-5 text-yellow-600 group-hover:text-yellow-700 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            <div
+                                                class="w-6 h-6 bg-yellow-100 group-hover:bg-yellow-200 rounded-full flex items-center justify-center transition-all duration-200">
+                                                <svg class="w-3 h-3 text-yellow-600 group-hover:text-yellow-700 transition-all duration-200"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M9 5l7 7-7 7"></path>
                                                 </svg>
                                             </div>
                                         </div>
