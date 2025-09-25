@@ -1,11 +1,11 @@
 # Resumo Executivo - Sistema de Votação
 
 ## 📊 Status Geral do Projeto
-**Data:** 25/01/2025 17:30  
+**Data:** 25/01/2025 18:00  
 **Status:** ✅ Pronto para Deploy em Produção  
 **Ambiente:** Desenvolvimento Local + Docker  
 **Autenticação:** SARAM (Militar)  
-**Última Atualização:** Migração SARAM e Configuração Docker
+**Última Atualização:** Consolidação de Documentação e Correção de Permissões SQLite
 
 ## 🎯 Visão Geral
 
@@ -25,6 +25,12 @@ O Sistema de Votação de Fotos está **100% funcional** com todas as funcionali
 - **Botão Limpar Filtros:** Reset condicional e intuitivo
 - **Legendas Otimizadas:** Espaço em branco ao invés de "Sem legenda"
 - **Alinhamento Visual:** Layout consistente em todas as telas
+
+### ✅ Correções Críticas de Deploy
+- **Permissões SQLite:** Corrigido erro "attempt to write a readonly database"
+- **Ownership:** database.sqlite agora pertence a www-data:www-data
+- **Permissões:** 664 para arquivo, 775 para diretório
+- **Init Script:** Automatização de correção de permissões no deploy
 
 ### ✅ Mudanças Críticas Recentes
 - **Migração SARAM:** Substituição completa do campo email por saram
@@ -103,15 +109,21 @@ O Sistema de Votação de Fotos está **100% funcional** com todas as funcionali
 - Estados gerenciados eficientemente no frontend
 - Carregamento rápido em todas as páginas
 
-## 📋 Documentação Atualizada
+## 📋 Documentação Consolidada
 
-### Arquivos de Documentação
-- ✅ **STATUS_FUNCIONALIDADES.md:** Completo e atualizado
-- ✅ **PROGRESSO_PROJETO.md:** Histórico de correções
-- ✅ **CHANGELOG_RECENTE.md:** Mudanças detalhadas
-- ✅ **PROXIMOS_PASSOS.md:** Roadmap atualizado
-- ✅ **BOAS_PRATICAS.md:** Padrões implementados
-- ✅ **CORRECOES_LINTING.md:** Problemas resolvidos
+### Estrutura de Documentação Otimizada
+- ✅ **RESUMO_EXECUTIVO.md:** Status geral e conquistas (ESTE ARQUIVO)
+- ✅ **BOAS_PRATICAS.md:** Padrões e melhores práticas
+- ✅ **DOCKER_DEPLOY.md:** Configuração e deploy Docker
+- ✅ **TROUBLESHOOTING_DEPLOY.md:** Soluções para problemas de deploy
+- ✅ **Arquivos 1-8:** Documentação técnica estruturada (contexto, arquitetura, stack, etc.)
+
+### Arquivos Removidos (Consolidados)
+- ❌ **STATUS_FUNCIONALIDADES.md:** Informações integradas ao RESUMO_EXECUTIVO
+- ❌ **PROGRESSO_PROJETO.md:** Histórico consolidado no RESUMO_EXECUTIVO
+- ❌ **CHANGELOG_RECENTE.md:** Mudanças integradas ao RESUMO_EXECUTIVO
+- ❌ **PROXIMOS_PASSOS.md:** Roadmap integrado ao RESUMO_EXECUTIVO
+- ❌ **CORRECOES_LINTING.md:** Informações técnicas específicas removidas
 
 ## 🚀 Próximos Passos Recomendados
 

@@ -126,9 +126,16 @@
 │     └── UNIQUE(user_id, photo_id)      │
 ├─────────────────────────────────────────┤
 │ Storage Layer                           │
+│ ├── database/database.sqlite (SQLite)   │
 │ ├── storage/app/public/photos/          │
 │ ├── database/migrations/                │
 │ └── database/seeders/                   │
+├─────────────────────────────────────────┤
+│ Docker Configuration                    │
+│ ├── docker/init.sh (Permissions)       │
+│ ├── docker/nginx.conf                  │
+│ ├── docker/supervisord.conf            │
+│ └── Dockerfile                         │
 └─────────────────────────────────────────┘
 ```
 

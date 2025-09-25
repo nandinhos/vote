@@ -54,12 +54,16 @@ APP_TIMEZONE=America/Sao_Paulo
 APP_URL=http://localhost
 
 # Database
-DB_CONNECTION=mysql|pgsql
-DB_HOST=127.0.0.1
-DB_PORT=3306|5432
-DB_DATABASE=vote_system
-DB_USERNAME=root
-DB_PASSWORD=
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+
+# Configuração alternativa para MySQL/PostgreSQL
+# DB_CONNECTION=mysql|pgsql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306|5432
+# DB_DATABASE=vote_system
+# DB_USERNAME=root
+# DB_PASSWORD=
 
 # Session & Cache
 SESSION_DRIVER=database
@@ -517,29 +521,61 @@ chmod -R 755 storage/
 chmod -R 755 bootstrap/cache/
 ```
 
+## Containerização e Deploy
+
+### Docker Stack
+```yaml
+# docker-compose.yml
+services:
+  app:
+    build: .
+    ports:
+      - "8011:80"
+    volumes:
+      - ./database:/var/www/html/database
+    environment:
+      - APP_ENV=production
+      - DB_CONNECTION=sqlite
+```
+
+### Dockerfile
+```dockerfile
+FROM php:8.2-fpm-alpine
+RUN apk add --no-cache nginx supervisor sqlite
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/init.sh /usr/local/bin/init.sh
+EXPOSE 80
+CMD ["/usr/local/bin/init.sh"]
+```
+
+### Configurações Críticas
+- **Permissões SQLite**: database.sqlite deve pertencer a www-data:www-data
+- **Diretório Database**: Permissões 775 para escrita
+- **Init Script**: Automatiza correção de permissões no startup
+- **Supervisor**: Gerencia PHP-FPM + Nginx
+- **Volume Mount**: Database persistente fora do container
+
 ### Environment Variables (Production)
 ```bash
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://yourdomain.com
+APP_URL=http://localhost:8011
 
-# Database
-DB_CONNECTION=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE=vote_production
-DB_USERNAME=vote_user
-DB_PASSWORD=secure_password
+# Database SQLite (Recomendado)
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
 
 # Cache & Session
-CACHE_DRIVER=redis
-SESSION_DRIVER=redis
-QUEUE_CONNECTION=redis
+CACHE_DRIVER=database
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
 
-# Mail
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
+# Configuração alternativa MySQL (se necessário)
+# DB_CONNECTION=mysql
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_DATABASE=vote_production
+# DB_USERNAME=vote_user
+# DB_PASSWORD=secure_password
 ```

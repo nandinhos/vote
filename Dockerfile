@@ -35,9 +35,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Criar usuário para aplicação
-RUN addgroup -g 1000 -S www && \
-    adduser -u 1000 -S www -G www
+# Usar www-data padrão do PHP-FPM (mais compatível)
+RUN addgroup -g 82 -S www-data || true && \
+    adduser -u 82 -S www-data -G www-data || true
 
 # Definir diretório de trabalho
 WORKDIR /var/www/html
@@ -54,17 +54,33 @@ RUN npm ci --legacy-peer-deps
 # Copiar código da aplicação
 COPY . .
 
-# Criar diretórios necessários e definir permissões
+# Criar diretórios necessários primeiro
 RUN mkdir -p /var/www/html/bootstrap/cache \
-    && mkdir -p /var/log/supervisor \
-    && chown -R www:www /var/www/html \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/app/public
+
+# Criar arquivo .env se não existir (para build)
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Gerar APP_KEY se necessário
+RUN if ! grep -q "APP_KEY=base64:" .env; then php artisan key:generate --force; fi
+
+# Definir permissões
+RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Copiar configurações
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/init.sh /usr/local/bin/init.sh
+
+# Tornar o script executável
+RUN chmod +x /usr/local/bin/init.sh
 
 # Build assets
 RUN npm run build
@@ -72,12 +88,8 @@ RUN npm run build
 # Limpar cache npm
 RUN npm cache clean --force && rm -rf node_modules
 
-# Executar comandos Laravel
-RUN php artisan config:cache \
-    && php artisan route:cache
-
 # Expor porta
 EXPOSE 80
 
-# Comando de inicialização
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Comando de inicialização usando nosso script
+ENTRYPOINT ["/usr/local/bin/init.sh"]

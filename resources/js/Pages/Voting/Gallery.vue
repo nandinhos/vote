@@ -70,21 +70,15 @@
                      @click="openPhotoModal(photo)">
                     
                     <!-- Card da Foto -->
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 group cursor-pointer relative">
+                    <div :class="[
+                        'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer relative',
+                        isPhotoVoted(photo.id) ? 'ring-4 ring-green-400 ring-opacity-60' : ''
+                    ]">
                         <!-- Badge do Projeto -->
                         <div class="absolute top-2 left-2 z-10">
                             <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
                                 {{ photo.project_name }}
                             </span>
-                        </div>
-                    
-                        <!-- Indicador de Voto -->
-                        <div v-if="isPhotoVoted(photo.id)" class="absolute top-2 right-2 z-10">
-                            <div class="bg-green-500 text-white rounded-full p-1">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
                         </div>
                     
                         <!-- Botão de Coração para Voto Direto - Parte Inferior Centralizada -->

@@ -1,74 +1,6 @@
 # Boas Práticas - Sistema de Votação
 
-## 🚀 Deploy e Troubleshooting
-
-### ⚠️ Problemas Comuns de Deploy e Soluções
-
-#### 1. Erro 500 - Permissões de Arquivo
-**Problema:** Laravel retorna erro 500 após deploy
-**Causa:** Permissões incorretas nos diretórios de cache e storage
-**Solução:**
-```bash
-# Corrigir permissões para www-data
-docker-compose exec app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Verificar se as permissões estão corretas
-docker-compose exec app ls -la /var/www/html/storage
-```
-
-#### 2. Cache Corrompido
-**Problema:** Aplicação não reflete mudanças ou apresenta erros estranhos
-**Causa:** Cache antigo ou corrompido
-**Solução:**
-```bash
-# Limpar todos os caches do Laravel
-docker-compose exec app php artisan optimize:clear
-
-# Regenerar autoload do Composer
-docker-compose exec app composer dump-autoload
-```
-
-#### 3. Conflito de Portas
-**Problema:** Aplicação não responde ou retorna erro de conexão
-**Causa:** Serviços locais (Apache/Nginx) conflitando com Docker
-**Solução:**
-```bash
-# Verificar serviços rodando nas portas
-sudo netstat -tlnp | grep -E ':80|:8011'
-
-# Parar Apache local se necessário
-sudo systemctl stop apache2
-
-# Reiniciar containers Docker
-docker-compose restart
-```
-
-#### 4. Checklist de Deploy
-✅ **Antes do Deploy:**
-- [ ] Verificar se não há serviços locais nas portas usadas
-- [ ] Confirmar que o arquivo .env está configurado
-- [ ] Verificar se as dependências estão instaladas
-
-✅ **Após o Deploy:**
-- [ ] Testar rota principal (deve redirecionar para /login)
-- [ ] Verificar logs de erro: `docker-compose logs app`
-- [ ] Confirmar permissões de storage e cache
-- [ ] Testar funcionalidades básicas
-
-#### 5. Comandos de Diagnóstico
-```bash
-# Verificar status dos containers
-docker-compose ps
-
-# Ver logs em tempo real
-docker-compose logs -f app
-
-# Acessar container para debug
-docker-compose exec app bash
-
-# Testar conectividade
-curl -I http://localhost:8011
-```
+> **Nota:** Para problemas de deploy e troubleshooting, consulte o arquivo `TROUBLESHOOTING_DEPLOY.md`
 
 ## 🏗️ Arquitetura e Estrutura
 
@@ -394,6 +326,86 @@ public function vote(int $userId, int $photoId): bool
 }
 ```
 
+## 🚀 Alterações em Produção
+
+### ⚠️ FLUXO OBRIGATÓRIO PARA ALTERAÇÕES EM PRODUÇÃO
+
+**SEMPRE siga este fluxo para qualquer mudança no projeto em produção:**
+
+#### 1. Alterar Arquivo Local
+```bash
+# Faça as alterações necessárias no arquivo local
+# Exemplo: resources/js/Pages/Profile/Edit.vue
+```
+
+#### 2. Alterar Arquivo no Container
+```bash
+# Acesse o container
+docker exec -it vote_app /bin/sh
+
+# Navegue até o arquivo ex:
+cd /var/www/html/resources/js/Pages/Profile/
+
+# Substitua o conteúdo usando cat
+cat > Edit.vue << 'EOF'
+[CONTEÚDO DO ARQUIVO ATUALIZADO]
+EOF
+```
+
+#### 3. Compilar Assets no Container
+```bash
+# SEMPRE execute o build após alterações em arquivos Vue/JS
+npm run build
+
+# Saia do container
+exit
+```
+
+### 📦 Dependências NPM
+
+#### Instalação com Conflitos de Dependências
+```bash
+# Use --legacy-peer-deps para resolver conflitos de versão
+npm install --legacy-peer-deps
+```
+
+**⚠️ IMPORTANTE:** Sempre use `--legacy-peer-deps` quando houver conflitos entre versões do Vite, Vue e outras dependências. Isso evita erros de resolução de dependências.
+
+#### Exemplo de Erro Comum:
+```
+npm error ERESOLVE could not resolve
+npm error peer vite@"^5.0.0 || ^6.0.0" from @vitejs/plugin-vue@5.2.4
+```
+
+**Solução:**
+```bash
+npm install --legacy-peer-deps
+```
+
+### 🔄 Checklist de Alterações em Produção
+
+- [ ] **1. Arquivo local alterado e salvo**
+- [ ] **2. Arquivo no container atualizado com `cat`**
+- [ ] **3. `npm run build` executado no container**
+- [ ] **4. Aplicação testada na porta 8011**
+- [ ] **5. Funcionalidade validada**
+
+### ⚡ Comandos Úteis para Produção
+
+```bash
+# Verificar status do container
+docker ps
+
+# Acessar container
+docker exec -it vote_app /bin/sh
+
+# Verificar se aplicação está rodando
+curl http://localhost:8011
+
+# Reiniciar container se necessário
+docker-compose restart
+```
+
 ## 📚 Recursos e Referências
 
 ### Laravel
@@ -412,5 +424,5 @@ public function vote(int $userId, int $photoId): bool
 
 ---
 
-**Última atualização:** $(date +"%d/%m/%Y %H:%M")  
+**Última atualização:** 25/09/2025 14:30  
 **Mantenha este documento atualizado conforme o projeto evolui.**

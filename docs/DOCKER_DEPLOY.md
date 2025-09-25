@@ -24,7 +24,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:80"
+      - "8011:80"
     volumes:
       - ./storage:/var/www/html/storage
       - ./database:/var/www/html/database
@@ -103,7 +103,7 @@ php artisan serve --host=0.0.0.0 --port=8000
 ```bash
 # Usando docker-compose
 docker-compose up -d
-# Acesso: http://localhost:8080
+# Acesso: http://localhost:8011
 ```
 
 ### Produção
@@ -120,7 +120,7 @@ docker-compose up -d
 APP_NAME="Sistema de Votação"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=http://localhost:8080
+APP_URL=http://localhost:8011
 
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
@@ -164,7 +164,7 @@ sqlite3 database/database.sqlite .dump > database/backup_$(date +%Y%m%d_%H%M%S).
 ### Health Checks
 ```bash
 # Verificar saúde da aplicação
-curl http://localhost:8080/health
+curl http://localhost:8011/health
 
 # Logs do container
 docker-compose logs app

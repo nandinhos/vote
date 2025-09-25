@@ -1,11 +1,16 @@
 # Guia de Troubleshooting - Deploy Docker
 
-## 🚨 Problema Resolvido: Erro 500 após Deploy
+## 🚨 Problemas Resolvidos: Erros de Deploy
 
-### Resumo do Caso
+### 1. Erro 500 - Permissões de Storage/Cache
 **Data:** 25/09/2025  
 **Erro:** HTTP 500 Internal Server Error  
-**Causa Principal:** Permissões incorretas nos diretórios de cache e storage  
+**Causa Principal:** Permissões incorretas nos diretórios de cache e storage
+
+### 2. Erro SQLite - Database Read-Only  
+**Data:** 25/01/2025  
+**Erro:** SQLSTATE[HY000]: General error: 8 attempt to write a readonly database  
+**Causa Principal:** database.sqlite pertencia ao usuário 1000, mas PHP-FPM roda como www-data  
 
 ### Sintomas Observados
 - ✅ Docker containers rodando normalmente
@@ -68,7 +73,66 @@ docker-compose restart
 ✅ **Aplicação funcionando perfeitamente**  
 ✅ **Redirecionamento para /login funcionando**  
 ✅ **Assets Vite carregando corretamente**  
-✅ **Cookies de sessão sendo configurados**  
+✅ **Cookies de sessão sendo configurados**
+
+## 🗄️ Correção de Permissões SQLite
+
+### Problema Identificado
+```bash
+# Erro nos logs do Laravel
+SQLSTATE[HY000]: General error: 8 attempt to write a readonly database
+
+# Verificação de ownership
+docker exec vote_app ls -la /var/www/html/database/
+# database.sqlite owned by 1000:1000, but PHP-FPM runs as www-data
+```
+
+### Solução Implementada
+
+#### 1. Correção no init.sh
+```bash
+# Adicionado ao docker/init.sh
+echo "Corrigindo permissões do banco de dados..."
+chown www-data:www-data /var/www/html/database/database.sqlite
+chown www-data:www-data /var/www/html/database/
+chmod 664 /var/www/html/database/database.sqlite
+chmod 775 /var/www/html/database/
+```
+
+#### 2. Rebuild e Restart
+```bash
+# Parar container
+docker-compose down
+
+# Rebuild com correções
+docker-compose build app
+
+# Iniciar novamente
+docker-compose up -d app
+```
+
+#### 3. Verificação
+```bash
+# Verificar permissões corrigidas
+docker exec vote_app ls -la /var/www/html/database/
+# Resultado: database.sqlite agora é www-data:www-data
+
+# Testar operação de escrita
+docker exec vote_app sqlite3 /var/www/html/database/database.sqlite \
+  "CREATE TABLE IF NOT EXISTS test_table (id INTEGER, data TEXT); 
+   INSERT INTO test_table VALUES (1, 'test_write');"
+
+# Verificar se escrita funcionou
+docker exec vote_app sqlite3 /var/www/html/database/database.sqlite \
+  "SELECT * FROM test_table WHERE id = 1;"
+# Resultado: 1|test_write
+```
+
+### Resultado SQLite
+✅ **Database.sqlite agora pertence a www-data:www-data**  
+✅ **Permissões 664 para arquivo, 775 para diretório**  
+✅ **Operações de escrita funcionando normalmente**  
+✅ **Erro 500 resolvido, agora retorna 419 (CSRF) - comportamento esperado**  
 
 ## 📋 Checklist de Prevenção
 

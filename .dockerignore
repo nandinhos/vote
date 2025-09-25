@@ -13,7 +13,6 @@ context/
 
 # Development files
 .env
-.env.example
 .env.local
 .env.testing
 
