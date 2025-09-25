@@ -25,9 +25,9 @@ class ProjectController extends Controller
 
         // Filtro de status
         if ($request->filled('status')) {
-            if ($request->status === 'active') {
+            if ($request->status === '1' || $request->status === 'active') {
                 $query->where('is_active', true);
-            } elseif ($request->status === 'inactive') {
+            } elseif ($request->status === '0' || $request->status === 'inactive') {
                 $query->where('is_active', false);
             }
         }

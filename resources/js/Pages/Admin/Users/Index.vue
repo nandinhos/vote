@@ -1,6 +1,23 @@
 <template>
     <AdminLayout>
+
         <Head title="Gerenciar Usuários" />
+
+        <template #header>
+
+            <div class="flex top-4 justify-between items-center mb-6">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Gerenciar Usuários
+                </h2>
+                <div class="fixed top-4 right-16 flex space-x-2">
+                    <Link :href="route('admin.users.create')"
+                        class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
+                    <PlusIcon class="w-5 h-5 mr-2" />
+                    Criar Usuário
+                    </Link>
+                </div>
+            </div>
+        </template>
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -64,34 +81,23 @@
                 <!-- Tabela de Usuários -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-semibold text-gray-800">Gerenciar Usuários</h2>
-                            <Link :href="route('admin.users.create')" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                                <PlusIcon class="w-5 h-5 mr-2" />
-                                Criar Usuário
-                            </Link>
-                        </div>
+
 
                         <!-- Filtros e Busca -->
                         <div class="mb-6 flex flex-col sm:flex-row gap-4">
                             <div class="flex-1">
                                 <div class="relative">
-                                    <input v-model="search" 
-                                           @input="performSearch"
-                                           type="text" 
-                                           placeholder="Buscar por nome ou SARAM..." 
-                                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <input v-model="search" @input="performSearch" type="text"
+                                        placeholder="Buscar por nome ou SARAM..."
+                                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" />
                                     </div>
                                 </div>
                             </div>
                             <div>
-                                <select
-                                    v-model="roleFilter"
-                                    @change="performSearch"
-                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
+                                <select v-model="roleFilter" @change="performSearch"
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Todas as funções</option>
                                     <option value="voter">Votantes</option>
                                     <option value="admin">Administradores</option>
@@ -104,19 +110,24 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Usuário
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             SARAM
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Função
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Cadastro
                                         </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Ações
                                         </th>
                                     </tr>
@@ -130,8 +141,9 @@
                                             <div class="text-sm text-gray-900">{{ user.saram }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span :class="user.role === 'admin' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'" 
-                                                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                            <span
+                                                :class="user.role === 'admin' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'"
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
                                                 {{ user.role === 'admin' ? 'Administrador' : 'Votante' }}
                                             </span>
                                         </td>
@@ -140,19 +152,19 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-3">
-                                                <Link :href="route('admin.users.show', user.id)" 
-                                                      class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors duration-200"
-                                                      title="Ver usuário">
-                                                    <EyeIcon class="w-4 h-4" />
+                                                <Link :href="route('admin.users.show', user.id)"
+                                                    class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                                    title="Ver usuário">
+                                                <EyeIcon class="w-4 h-4" />
                                                 </Link>
-                                                <Link :href="route('admin.users.edit', user.id)" 
-                                                      class="inline-flex items-center justify-center w-8 h-8 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-md transition-colors duration-200"
-                                                      title="Editar usuário">
-                                                    <PencilIcon class="w-4 h-4" />
+                                                <Link :href="route('admin.users.edit', user.id)"
+                                                    class="inline-flex items-center justify-center w-8 h-8 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-md transition-colors duration-200"
+                                                    title="Editar usuário">
+                                                <PencilIcon class="w-4 h-4" />
                                                 </Link>
-                                                <button @click="confirmDelete(user)" 
-                                                        class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors duration-200"
-                                                        title="Excluir usuário">
+                                                <button @click="confirmDelete(user)"
+                                                    class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors duration-200"
+                                                    title="Excluir usuário">
                                                     <TrashIcon class="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -166,13 +178,13 @@
                         <div class="mt-6" v-if="users.links.length > 3">
                             <nav class="flex items-center justify-between">
                                 <div class="flex-1 flex justify-between sm:hidden">
-                                    <Link v-if="users.prev_page_url" :href="users.prev_page_url" 
-                                          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                        Anterior
+                                    <Link v-if="users.prev_page_url" :href="users.prev_page_url"
+                                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Anterior
                                     </Link>
-                                    <Link v-if="users.next_page_url" :href="users.next_page_url" 
-                                          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                        Próximo
+                                    <Link v-if="users.next_page_url" :href="users.next_page_url"
+                                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Próximo
                                     </Link>
                                 </div>
                                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
@@ -184,21 +196,17 @@
                                     <div>
                                         <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                             <template v-for="(link, index) in users.links" :key="index">
-                                                <Link v-if="link.url" :href="link.url" 
-                                                      :class="[
-                                                          'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                          link.active 
-                                                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' 
-                                                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                      ]"
-                                                      v-html="link.label">
+                                                <Link v-if="link.url" :href="link.url" :class="[
+                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                                    link.active
+                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                ]" v-html="link.label">
                                                 </Link>
-                                                <span v-else 
-                                                      :class="[
-                                                          'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                                                          'bg-white border-gray-300 text-gray-300 cursor-default'
-                                                      ]"
-                                                      v-html="link.label">
+                                                <span v-else :class="[
+                                                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                                    'bg-white border-gray-300 text-gray-300 cursor-default'
+                                                ]" v-html="link.label">
                                                 </span>
                                             </template>
                                         </nav>
@@ -217,23 +225,24 @@
                 <div class="mt-3 text-center">
                     <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                         <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 mt-2">Confirmar Exclusão</h3>
                     <div class="mt-2 px-7 py-3">
                         <p class="text-sm text-gray-500">
-                            Tem certeza que deseja excluir o usuário <strong>{{ userToDelete?.name }}</strong>? 
+                            Tem certeza que deseja excluir o usuário <strong>{{ userToDelete?.name }}</strong>?
                             Esta ação não pode ser desfeita.
                         </p>
                     </div>
                     <div class="items-center px-4 py-3">
-                        <button @click="deleteUser" 
-                                class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                        <button @click="deleteUser"
+                            class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
                             Excluir
                         </button>
-                        <button @click="showDeleteModal = false" 
-                                class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        <button @click="showDeleteModal = false"
+                            class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
                             Cancelar
                         </button>
                     </div>
@@ -247,10 +256,10 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { 
-    EyeIcon, 
-    PencilIcon, 
-    TrashIcon, 
+import {
+    EyeIcon,
+    PencilIcon,
+    TrashIcon,
     PlusIcon,
     MagnifyingGlassIcon,
     UsersIcon,
