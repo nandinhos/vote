@@ -66,7 +66,7 @@ class VotingControllerTest extends TestCase
     }
 
     /** @test */
-    public function user_can_vote_for_photo_in_inactive_project(): void
+    public function user_cannot_vote_for_photo_in_inactive_project(): void
     {
         $photo = Photo::factory()->create(['project_id' => $this->inactiveProject->id]);
 
@@ -75,9 +75,9 @@ class VotingControllerTest extends TestCase
             ->post(route('voting.vote', $photo));
 
         $response->assertRedirect();
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
         
-        $this->assertDatabaseHas('votes', [
+        $this->assertDatabaseMissing('votes', [
             'user_id' => $this->user->id,
             'photo_id' => $photo->id,
         ]);

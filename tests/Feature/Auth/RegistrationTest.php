@@ -9,6 +9,10 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    // NOTA: Testes de registro foram desabilitados pois o registro agora é gerenciado por administrador
+    // As rotas de registro estão comentadas em routes/auth.php
+
+    /*
     public function test_registration_screen_can_be_rendered(): void
     {
         $response = $this->get('/register');
@@ -28,5 +32,15 @@ class RegistrationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+    */
+
+    public function test_registration_routes_are_disabled(): void
+    {
+        $response = $this->get('/register');
+        $response->assertStatus(404);
+
+        $response = $this->post('/register', []);
+        $response->assertStatus(404);
     }
 }

@@ -84,13 +84,17 @@ class VotingService
      */
     private function validateVote(Photo $photo, int $userId): void
     {
+        // Check if project is active
+        if (!$photo->project->is_active) {
+            throw VotingException::inactiveProject();
+        }
+
         // Check if user already voted for this photo
         if ($this->hasUserVoted($userId, $photo->id)) {
             throw VotingException::alreadyVoted();
         }
 
         // Check if user has reached the maximum number of votes (10)
-        // New rule: Allow free voting up to 10 photos regardless of project status
         if ($this->getUserVoteCount($userId) >= 10) {
             throw VotingException::voteLimit();
         }

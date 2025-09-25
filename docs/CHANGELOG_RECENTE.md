@@ -1,5 +1,58 @@
 # Changelog - Mudanças Recentes
 
+## [25/01/2025] - Migração para Autenticação SARAM e Configuração Docker
+
+### 🔐 Mudanças Críticas de Autenticação
+
+#### 🆔 Migração de Email para SARAM
+- **Substituição completa do campo `email` por `saram`**
+  - Campo `saram` agora é o identificador único para autenticação
+  - Atualização em todos os modelos, controladores e formulários
+  - Migração de banco de dados para suportar autenticação militar
+  - Validação de unicidade implementada para campo `saram`
+
+#### 🔧 Correções no VotingService
+- **Validação de projetos ativos**
+  - Implementada verificação se projeto está ativo antes de permitir votação
+  - Correção de tipos de dados (cast para integer em Auth::id())
+  - Implementação de limite de votos por usuário
+
+#### 🧪 Atualização de Testes Automatizados
+- **Correção de testes de autenticação**
+  - Atualização para usar campo `saram` ao invés de `email`
+  - Desabilitação de testes de registro (funcionalidade removida)
+  - Correção de testes de votação para projetos inativos
+
+### 🐳 Configuração Docker Completa
+
+#### 📦 Containerização
+- **Dockerfile otimizado para produção**
+  - Configuração multi-stage para Laravel + Vue.js
+  - Nginx + PHP-FPM + Supervisor
+  - Otimização de imagens e dependências
+  - Suporte a SQLite e PostgreSQL
+
+#### 🚀 Deploy Automatizado
+- **Script de deploy completo (`deploy.sh`)**
+  - Verificação de dependências (Docker, Docker Compose)
+  - Geração automática de APP_KEY
+  - Execução de migrações e seeders
+  - Otimização de cache e assets
+  - Testes de conectividade
+
+#### ⚙️ Configurações de Ambiente
+- **Arquivos de configuração Docker**
+  - `nginx.conf` - Configuração otimizada do Nginx
+  - `supervisord.conf` - Gerenciamento de processos
+  - `php.ini` - Configurações PHP para produção
+  - `.env.production` - Template para ambiente de produção
+
+### 💾 Backup e Segurança
+- **Backup automático do banco de dados**
+  - Backup em formato SQLite (.sqlite)
+  - Dump SQL para portabilidade (.sql)
+  - Versionamento com timestamp
+
 ## [25/01/2025] - Melhorias de UX e Persistência de Filtros
 
 ### ✨ Novas Funcionalidades

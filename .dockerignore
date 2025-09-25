@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+STATUS_PROJETO.md
+OTIMIZACAO_IMAGENS.md
+docs/
+context/
+
+# Development files
+.env
+.env.example
+.env.local
+.env.testing
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+/public/hot
+/public/storage
+/storage/*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Logs
+storage/logs/
+*.log
+
+# Cache
+bootstrap/cache/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+
+# Backup files
+database/backup_*
+
+# Docker
+Dockerfile
+docker-compose.yml
+# docker/ - Necessário para configurações do container

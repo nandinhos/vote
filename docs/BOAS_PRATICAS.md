@@ -1,5 +1,75 @@
 # Boas Práticas - Sistema de Votação
 
+## 🚀 Deploy e Troubleshooting
+
+### ⚠️ Problemas Comuns de Deploy e Soluções
+
+#### 1. Erro 500 - Permissões de Arquivo
+**Problema:** Laravel retorna erro 500 após deploy
+**Causa:** Permissões incorretas nos diretórios de cache e storage
+**Solução:**
+```bash
+# Corrigir permissões para www-data
+docker-compose exec app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Verificar se as permissões estão corretas
+docker-compose exec app ls -la /var/www/html/storage
+```
+
+#### 2. Cache Corrompido
+**Problema:** Aplicação não reflete mudanças ou apresenta erros estranhos
+**Causa:** Cache antigo ou corrompido
+**Solução:**
+```bash
+# Limpar todos os caches do Laravel
+docker-compose exec app php artisan optimize:clear
+
+# Regenerar autoload do Composer
+docker-compose exec app composer dump-autoload
+```
+
+#### 3. Conflito de Portas
+**Problema:** Aplicação não responde ou retorna erro de conexão
+**Causa:** Serviços locais (Apache/Nginx) conflitando com Docker
+**Solução:**
+```bash
+# Verificar serviços rodando nas portas
+sudo netstat -tlnp | grep -E ':80|:8011'
+
+# Parar Apache local se necessário
+sudo systemctl stop apache2
+
+# Reiniciar containers Docker
+docker-compose restart
+```
+
+#### 4. Checklist de Deploy
+✅ **Antes do Deploy:**
+- [ ] Verificar se não há serviços locais nas portas usadas
+- [ ] Confirmar que o arquivo .env está configurado
+- [ ] Verificar se as dependências estão instaladas
+
+✅ **Após o Deploy:**
+- [ ] Testar rota principal (deve redirecionar para /login)
+- [ ] Verificar logs de erro: `docker-compose logs app`
+- [ ] Confirmar permissões de storage e cache
+- [ ] Testar funcionalidades básicas
+
+#### 5. Comandos de Diagnóstico
+```bash
+# Verificar status dos containers
+docker-compose ps
+
+# Ver logs em tempo real
+docker-compose logs -f app
+
+# Acessar container para debug
+docker-compose exec app bash
+
+# Testar conectividade
+curl -I http://localhost:8011
+```
+
 ## 🏗️ Arquitetura e Estrutura
 
 ### Organização de Código

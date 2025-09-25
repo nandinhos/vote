@@ -1,7 +1,19 @@
 # Status do Projeto - Sistema de Votação
-*Atualizado em: 24 de Setembro de 2024*
+*Atualizado em: 25 de Setembro de 2025*
 
-## 🎯 Estado Atual: ESTÁVEL ✅
+## 🎯 Estado Atual: DEPLOY REALIZADO ✅
+
+### 🚀 Deploy Docker Concluído
+- **Data do Deploy:** 25/09/2025
+- **Ambiente:** Docker + Nginx + PHP-FPM
+- **URL:** http://localhost:8011
+- **Status:** ✅ Funcionando perfeitamente
+
+### 🔧 Problemas Resolvidos no Deploy
+- ✅ **Permissões de arquivo** - Corrigidas para www-data
+- ✅ **Cache corrompido** - Limpo com `php artisan optimize:clear`
+- ✅ **Conflito de porta** - Apache local desabilitado
+- ✅ **Documentação** - Troubleshooting criado
 
 ### 📊 Resumo Executivo
 - **Backend:** Laravel 11 funcionando corretamente
