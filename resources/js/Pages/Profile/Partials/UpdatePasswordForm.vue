@@ -3,11 +3,26 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import Toast from '@/Components/Toast.vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
 
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref('success');
+
+const page = usePage();
+
+// Watch for flash messages
+const flashMessage = computed(() => page.props.flash?.success);
+
+watch(flashMessage, (newMessage) => {
+    if (newMessage) {
+        showToastMessage(newMessage, 'success');
+    }
+});
 
 const form = useForm({
     current_password: '',
@@ -18,7 +33,10 @@ const form = useForm({
 const updatePassword = () => {
     form.put(route('password.update'), {
         preserveScroll: true,
-        onSuccess: () => form.reset(),
+        onSuccess: () => {
+            form.reset();
+            // Toast will be shown via flash message watcher
+        },
         onError: () => {
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');
@@ -30,6 +48,20 @@ const updatePassword = () => {
             }
         },
     });
+};
+
+const showToastMessage = (message, type = 'success') => {
+    toastMessage.value = message;
+    toastType.value = type;
+    showToast.value = true;
+    
+    setTimeout(() => {
+        showToast.value = false;
+    }, 4000);
+};
+
+const closeToast = () => {
+    showToast.value = false;
 };
 </script>
 
@@ -119,4 +151,12 @@ const updatePassword = () => {
             </div>
         </form>
     </section>
+
+    <!-- Toast Component -->
+    <Toast
+        :show="showToast"
+        :message="toastMessage"
+        :type="toastType"
+        @close="closeToast"
+    />
 </template>

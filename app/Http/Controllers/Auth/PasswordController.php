@@ -20,10 +20,17 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
+        // Update the password
         $request->user()->update([
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back();
+        // Check if user is admin to redirect to user management page
+        if ($request->user()->isAdmin()) {
+            return redirect()->route('admin.users.index')
+                           ->with('success', 'Senha alterada com sucesso!');
+        }
+
+        return back()->with('success', 'Senha alterada com sucesso!');
     }
 }
