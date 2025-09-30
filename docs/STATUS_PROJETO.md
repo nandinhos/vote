@@ -1,5 +1,5 @@
 # Status do Projeto - Sistema de Votação
-*Atualizado em: 25 de Setembro de 2025*
+*Atualizado em: 30 de Setembro de 2025*
 
 ## 🎯 Estado Atual: DEPLOY REALIZADO ✅
 
@@ -13,6 +13,8 @@
 - ✅ **Permissões de arquivo** - Corrigidas para www-data
 - ✅ **Cache corrompido** - Limpo com `php artisan optimize:clear`
 - ✅ **Conflito de porta** - Apache local desabilitado
+- ✅ **Rate Limiting 503** - Configuração Nginx ajustada (60 req/min, burst 10)
+- ✅ **Traduções de Paginação** - Implementado suporte completo ao português brasileiro
 - ✅ **Documentação** - Troubleshooting criado
 
 ### 📊 Resumo Executivo
@@ -67,6 +69,20 @@
 - **Problema:** Sistema não aceitava SARAM de 7 dígitos
 - **Solução:** Corrigida validação para aceitar formato correto
 - **Impacto:** Registro funcionando conforme especificação
+
+### Rate Limiting Nginx (Janeiro 2025)
+- **Problema:** Erro 503 Service Temporarily Unavailable em desenvolvimento
+- **Causa:** Configuração muito restritiva (5 req/min, burst 3)
+- **Solução:** Ajustada para desenvolvimento (60 req/min, burst 10)
+- **Arquivo:** `docker/nginx.conf`
+- **Impacto:** Aplicação acessível sem limitações em desenvolvimento
+
+### Traduções de Paginação (Janeiro 2025)
+- **Problema:** Textos "Previous" e "Next" em inglês na paginação
+- **Causa:** Ausência de arquivos de tradução em português brasileiro
+- **Solução:** Criados arquivos `lang/pt_BR/pagination.php` e `lang/pt_BR/validation.php`
+- **Configuração:** APP_LOCALE=pt_BR já estava definido
+- **Impacto:** Interface completamente em português brasileiro
 
 ---
 

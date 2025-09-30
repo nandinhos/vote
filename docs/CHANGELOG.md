@@ -2,7 +2,26 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [Não Lançado] - 2024-09-24
+## [1.1.0] - 2025-09-30
+
+### 🔧 Corrigido
+- **Rate Limiting 503 Error** - Ajustada configuração Nginx muito restritiva que causava erro 503 em desenvolvimento
+  - Alterado de 5 req/min (burst 3) para 60 req/min (burst 10)
+  - Arquivo: `docker/nginx.conf`
+- **Traduções de Paginação** - Implementado suporte completo ao português brasileiro
+  - Criados arquivos `lang/pt_BR/pagination.php` e `lang/pt_BR/validation.php`
+  - Textos "Previous/Next" agora aparecem como "Anterior/Próximo"
+- **Reset de Votos** - Implementada funcionalidade para limpar todos os votos via Laravel Tinker
+  - Comando: `App\Models\Vote::truncate()`
+
+### ✨ Melhorado
+- **Configuração de Desenvolvimento** - Rate limiting otimizado para ambiente de desenvolvimento
+- **Experiência do Usuário** - Interface completamente traduzida para português brasileiro
+- **Administração** - Facilidade para reset de dados de votação
+
+---
+
+## [1.0.1] - 2024-09-24
 
 ### 🔧 Corrigido
 - **Validação de SARAM no registro** - Corrigida validação incorreta de email no RegisteredUserController que impedia registro com SARAM de 7 dígitos

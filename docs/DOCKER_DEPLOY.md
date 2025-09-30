@@ -1,258 +1,263 @@
-# Docker e Deploy - Sistema de Votação
+# Docker Deploy - Aplicação Vote
 
-## 🐳 Configuração Docker
+Este documento descreve o processo completo de deploy da aplicação Vote usando Docker.
 
-### Visão Geral
-O sistema está configurado para deploy usando Docker com as seguintes características:
-- **Container otimizado** para Laravel + Vue.js
-- **Multi-stage build** para reduzir tamanho da imagem
-- **Nginx + PHP-FPM** para performance em produção
-- **Supervisor** para gerenciamento de processos
-- **Suporte a SQLite e PostgreSQL**
+## Pré-requisitos
 
-### Arquivos de Configuração
+- Docker instalado
+- Docker Compose instalado
+- Porta 8011 disponível no host
 
-#### 📦 Dockerfile
-- **Base:** Ubuntu 22.04 LTS
-- **Serviços:** Nginx, PHP 8.2, Node.js 20, Supervisor
-- **Otimizações:** Cache de dependências, build multi-stage
-- **Segurança:** Usuário não-root, permissões adequadas
+## Estrutura do Projeto
 
-#### 🔧 docker-compose.yml
-```yaml
-services:
-  app:
-    build: .
-    ports:
-      - "8011:80"
-    volumes:
-      - ./storage:/var/www/html/storage
-      - ./database:/var/www/html/database
-    environment:
-      - APP_ENV=production
+```
+vote/
+├── docker/
+│   ├── Dockerfile
+│   ├── init.sh              # Script de inicialização
+│   ├── nginx.conf           # Configuração do Nginx
+│   ├── supervisord.conf     # Configuração do Supervisor
+│   └── php.ini             # Configuração do PHP
+├── docker-compose.yml
+└── [arquivos da aplicação Laravel]
 ```
 
-#### 🌐 nginx.conf
-- **Performance:** Gzip, cache de assets, rate limiting
-- **Segurança:** Headers de segurança, proteção contra ataques
-- **Laravel:** Configuração otimizada para rotas do Laravel
+## Configurações Importantes
 
-#### ⚙️ supervisord.conf
-- **Processos:** php-fpm, nginx, laravel-worker
-- **Logs:** Centralizados e rotacionados
-- **Restart:** Automático em caso de falha
+### 1. Dockerfile
 
-#### 🐘 php.ini
-- **Produção:** Configurações otimizadas para performance
-- **Segurança:** Desabilitação de funções perigosas
-- **Upload:** Limites adequados para fotos
-- **OPcache:** Habilitado para melhor performance
+O Dockerfile está configurado para:
+- Usar Alpine Linux como base
+- Instalar PHP 8.2 com extensões necessárias
+- Configurar usuário `www-data` (UID/GID 82)
+- Instalar Composer e Node.js
+- Configurar permissões corretas
 
-## 🚀 Deploy Automatizado
+### 2. Script de Inicialização (init.sh)
 
-### Script deploy.sh
-O script `deploy.sh` automatiza todo o processo de deploy:
+O `init.sh` executa as seguintes tarefas críticas:
 
 ```bash
-./deploy.sh
-```
+#!/bin/bash
 
-#### Funcionalidades do Script:
-1. **Verificação de dependências** (Docker, Docker Compose)
-2. **Configuração de ambiente** (.env, APP_KEY)
-3. **Build da imagem** Docker otimizada
-4. **Execução de migrações** e seeders
-5. **Otimização de cache** e assets
-6. **Teste de conectividade**
+# Limpar caches
+php artisan view:clear
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
 
-### Comandos Manuais
-
-#### Build e Start
-```bash
-# Build da imagem
-docker-compose build
-
-# Iniciar serviços
-docker-compose up -d
-
-# Verificar status
-docker-compose ps
-```
-
-#### Manutenção
-```bash
-# Logs em tempo real
-docker-compose logs -f
-
-# Executar comandos Laravel
-docker-compose exec app php artisan migrate
-
-# Parar serviços
-docker-compose down
-```
-
-## 🌍 Ambientes
-
-### Desenvolvimento Local
-```bash
-# Servidor Laravel nativo
-php artisan serve --host=0.0.0.0 --port=8000
-```
-
-### Docker Local
-```bash
-# Usando docker-compose
-docker-compose up -d
-# Acesso: http://localhost:8011
-```
-
-### Produção
-```bash
-# Deploy completo
-./deploy.sh
-# Configurar .env.production conforme necessário
-```
-
-## 📋 Variáveis de Ambiente
-
-### .env.production (Template)
-```env
-APP_NAME="Sistema de Votação"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=http://localhost:8011
-
-DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/database/database.sqlite
-
-# Configurar conforme ambiente de produção
-MAIL_MAILER=smtp
-MAIL_HOST=mailpit
-MAIL_PORT=1025
-```
-
-### Variáveis Importantes
-- `APP_KEY`: Gerado automaticamente pelo deploy.sh
-- `DB_CONNECTION`: sqlite (padrão) ou pgsql
-- `APP_URL`: URL de acesso da aplicação
-- `APP_DEBUG`: false em produção
-
-## 💾 Backup e Segurança
-
-### Backup Automático
-O sistema inclui backup automático do banco de dados:
-```bash
-# Backup SQLite
-cp database/database.sqlite database/backup_$(date +%Y%m%d_%H%M%S).sqlite
-
-# Dump SQL
-sqlite3 database/database.sqlite .dump > database/backup_$(date +%Y%m%d_%H%M%S).sql
-```
-
-### Volumes Persistentes
-- `./storage`: Arquivos de upload e logs
-- `./database`: Banco de dados SQLite
-
-### Segurança
-- **Headers de segurança** configurados no Nginx
-- **Rate limiting** para proteção contra ataques
-- **Usuário não-root** no container
-- **Variáveis sensíveis** em .env
-
-## 🔍 Monitoramento
-
-### Health Checks
-```bash
-# Verificar saúde da aplicação
-curl http://localhost:8011/health
-
-# Logs do container
-docker-compose logs app
-
-# Status dos processos
-docker-compose exec app supervisorctl status
-```
-
-### Logs Importantes
-- **Laravel:** `/var/www/html/storage/logs/laravel.log`
-- **Nginx:** `/var/log/nginx/access.log`, `/var/log/nginx/error.log`
-- **PHP-FPM:** `/var/log/php8.2-fpm.log`
-
-## 🛠️ Troubleshooting
-
-### Problemas Comuns
-
-#### Container não inicia
-```bash
-# Verificar logs
-docker-compose logs app
-
-# Rebuild sem cache
-docker-compose build --no-cache
-```
-
-#### Permissões de arquivo
-```bash
-# Corrigir permissões storage
-docker-compose exec app chown -R www-data:www-data storage
-```
-
-#### Banco de dados
-```bash
 # Executar migrações
-docker-compose exec app php artisan migrate
+echo "Executando migrações..."
+php artisan migrate --force
 
-# Verificar conexão
-docker-compose exec app php artisan tinker
+# Cache de configurações
+php artisan config:cache
+php artisan route:cache
+
+# Verificar conectividade com banco
+php artisan tinker --execute="DB::connection()->getPdo();"
+
+# CRÍTICO: Corrigir permissões do banco de dados
+echo "Corrigindo permissões do banco de dados..."
+chown www-data:www-data /var/www/html/database/database.sqlite
+chown www-data:www-data /var/www/html/database/
+chmod 664 /var/www/html/database/database.sqlite
+chmod 775 /var/www/html/database/
+
+# Criar diretório de logs do supervisor
+mkdir -p /var/log/supervisor
+
+# Iniciar supervisor
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 ```
 
-### Comandos Úteis
+### 3. Configuração do Supervisor (supervisord.conf)
+
+```ini
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:php-fpm]
+command=php-fpm8.2 -F
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:laravel-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/html/artisan queue:work --sleep=3 --tries=3
+autostart=true
+autorestart=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/html/storage/logs/worker.log
+```
+
+### 4. Configuração do Nginx (nginx.conf)
+
+```nginx
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    server {
+        listen 80;
+        server_name localhost;
+        root /var/www/html/public;
+        index index.php index.html;
+        
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+        
+        location ~ \.php$ {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            include fastcgi_params;
+        }
+    }
+}
+```
+
+## Processo de Deploy
+
+### 1. Build da Imagem
+
+```bash
+docker-compose build app
+```
+
+### 2. Iniciar Container
+
+```bash
+docker-compose up -d app
+```
+
+### 3. Verificar Status
+
+```bash
+# Status dos containers
+docker-compose ps
+
+# Logs da aplicação
+docker logs vote_app --tail 20
+
+# Verificar saúde do container
+docker inspect vote_app | grep -A 5 "Health"
+```
+
+### 4. Teste de Conectividade
+
+```bash
+# Teste básico
+curl -I http://localhost:8011
+
+# Deve retornar:
+# HTTP/1.1 302 Found
+# Location: http://localhost:8011/login
+```
+
+## Comandos Úteis
+
+### Rebuild Completo
+
+```bash
+# Parar container
+docker stop vote_app
+
+# Rebuild
+docker-compose build app
+
+# Iniciar
+docker-compose up -d app
+```
+
+### Debug
+
 ```bash
 # Entrar no container
-docker-compose exec app bash
+docker exec -it vote_app /bin/sh
 
-# Limpar cache
-docker-compose exec app php artisan cache:clear
+# Verificar permissões do banco
+ls -la /var/www/html/database/
 
-# Recompilar assets
-docker-compose exec app npm run build
+# Verificar processos
+ps aux
 
-# Verificar configuração
-docker-compose exec app php artisan config:show
+# Verificar logs do Laravel
+tail -f /var/www/html/storage/logs/laravel.log
 ```
 
-## 📈 Performance
+### Limpeza
 
-### Otimizações Implementadas
-- **OPcache** habilitado para PHP
-- **Gzip** compression no Nginx
-- **Cache de assets** com headers apropriados
-- **Build otimizado** do Vue.js para produção
-- **Supervisor** para gerenciamento eficiente de processos
-
-### Métricas Recomendadas
-- **Tempo de resposta:** < 200ms para páginas principais
-- **Uso de memória:** < 512MB por container
-- **CPU:** < 50% em operação normal
-- **Disco:** Monitorar crescimento do banco de dados
-
-## 🔄 Atualizações
-
-### Processo de Atualização
-1. **Backup** do banco de dados atual
-2. **Pull** das mudanças do código
-3. **Rebuild** da imagem Docker
-4. **Execução** de migrações
-5. **Teste** das funcionalidades principais
-
-### Rollback
 ```bash
-# Parar serviços
+# Parar e remover container
 docker-compose down
 
-# Restaurar backup
-cp database/backup_YYYYMMDD_HHMMSS.sqlite database/database.sqlite
+# Remover imagem
+docker rmi vote-app
 
-# Reiniciar
-docker-compose up -d
+# Rebuild completo
+docker-compose build app --no-cache
+```
+
+## Pontos Críticos de Atenção
+
+1. **Permissões do Banco de Dados**: O SQLite deve ter permissões `www-data:www-data`
+2. **Usuário nos Serviços**: Sempre usar `www-data`, nunca `www`
+3. **Diretórios de Log**: Criar `/var/log/supervisor` antes de iniciar
+4. **Ordem de Inicialização**: Migrations → Permissões → Supervisor
+5. **Health Check**: Container deve estar "healthy" antes de considerar deploy completo
+
+## Troubleshooting
+
+Para problemas específicos, consulte o arquivo `TROUBLESHOOTING_DEPLOY.md`.
+
+## Monitoramento
+
+### Logs em Tempo Real
+
+```bash
+# Logs do container
+docker logs vote_app -f
+
+# Logs do Laravel
+docker exec vote_app tail -f /var/www/html/storage/logs/laravel.log
+
+# Logs do Nginx
+docker exec vote_app tail -f /var/log/nginx/access.log
+```
+
+### Métricas de Performance
+
+```bash
+# Uso de recursos
+docker stats vote_app
+
+# Processos ativos
+docker exec vote_app ps aux
 ```

@@ -1,428 +1,296 @@
-# Boas Práticas - Sistema de Votação
+# Boas Práticas - Deploy Docker Laravel
 
-> **Nota:** Para problemas de deploy e troubleshooting, consulte o arquivo `TROUBLESHOOTING_DEPLOY.md`
+Este documento estabelece as melhores práticas para deploy de aplicações Laravel em containers Docker.
 
-## 🏗️ Arquitetura e Estrutura
+## 1. Gerenciamento de Permissões
 
-### Organização de Código
-✅ **Implementado no projeto:**
+### 1.1 Usuários e Grupos
 
-#### Backend (Laravel)
-```
-app/
-├── Http/
-│   ├── Controllers/     # Lógica de controle HTTP
-│   ├── Requests/        # Validação de entrada
-│   └── Middleware/      # Interceptadores de requisição
-├── Models/              # Modelos de dados (Eloquent)
-├── Services/            # Lógica de negócio
-└── Providers/           # Provedores de serviço
-```
+**✅ FAZER:**
+- Sempre usar `www-data` como usuário para serviços web (Nginx, PHP-FPM)
+- Manter consistência de UID/GID entre host e container quando necessário
+- Definir usuário explicitamente em todos os serviços
 
-#### Frontend (Vue.js)
-```
-resources/js/
-├── Components/          # Componentes reutilizáveis
-├── Layouts/            # Layouts de página
-├── Pages/              # Páginas da aplicação
-└── app.js              # Ponto de entrada
+**❌ NÃO FAZER:**
+- Usar usuário `www` (não existe no Alpine Linux)
+- Rodar serviços web como `root`
+- Misturar diferentes usuários para o mesmo tipo de serviço
+
+```bash
+# ✅ Correto
+user=www-data
+
+# ❌ Incorreto
+user=www
+user=root
 ```
 
-### Separação de Responsabilidades
-✅ **Controllers:** Apenas coordenação entre Request/Response
-✅ **Services:** Lógica de negócio concentrada
-✅ **Models:** Apenas relacionamentos e accessors
-✅ **Requests:** Validação de entrada isolada
+### 1.2 Permissões de Arquivos
 
-## 🔒 Segurança
+**✅ FAZER:**
+- Corrigir permissões no script de inicialização
+- Usar `chown` e `chmod` apropriados para cada tipo de arquivo
+- Verificar permissões após cada deploy
 
-### Implementadas
-✅ **CSRF Protection:** Tokens automáticos em formulários
-✅ **Authentication:** Middleware de autenticação
-✅ **Input Validation:** Form Requests para sanitização
-✅ **SQL Injection Protection:** Eloquent ORM
-
-### Recomendadas para implementar
-- [ ] **Rate Limiting:** Limitar tentativas de login
-- [ ] **Content Security Policy:** Headers de segurança
-- [ ] **HTTPS Enforcement:** Redirecionamento automático
-- [ ] **Session Security:** Configurações seguras
-
-```php
-// Exemplo de Rate Limiting
-Route::middleware(['throttle:60,1'])->group(function () {
-    Route::post('/voting/{photo}/vote', [VotingController::class, 'vote']);
-});
+```bash
+# ✅ Exemplo correto para SQLite
+chown www-data:www-data /var/www/html/database/database.sqlite
+chmod 664 /var/www/html/database/database.sqlite
+chown www-data:www-data /var/www/html/database/
+chmod 775 /var/www/html/database/
 ```
 
-## 🎯 Validação e Tratamento de Erros
+**❌ NÃO FAZER:**
+- Assumir que permissões do host serão mantidas no container
+- Usar `chmod 777` como solução rápida
+- Ignorar permissões de diretórios pais
 
-### Implementadas
-✅ **Form Requests:** Validação centralizada
-✅ **Type Casting:** Conversão explícita de tipos
-✅ **Route Model Binding:** Validação automática de existência
+### 1.3 Banco de Dados SQLite
 
-### Exemplo de boa prática implementada:
-```php
-// VotingController.php - Cast explícito
-$userVotes = $this->votingService->getUserVotes((int)Auth::id());
+**✅ FAZER:**
+- Sempre corrigir permissões do arquivo `.sqlite` no init
+- Verificar permissões do diretório pai
+- Testar operações de escrita após deploy
 
-// UnvoteRequest.php - Validação simplificada
-public function rules(): array
-{
-    return []; // Route model binding cuida da validação
-}
+```bash
+# ✅ Verificação de permissões
+ls -la /var/www/html/database/database.sqlite
+# Deve mostrar: -rw-rw-r-- 1 www-data www-data
+
+# ✅ Teste de escrita
+sqlite3 database.sqlite "INSERT INTO test_table (name) VALUES ('test');"
 ```
 
-### Recomendadas
-- [ ] **Global Exception Handler:** Tratamento centralizado
-- [ ] **Custom Exceptions:** Exceções específicas do domínio
-- [ ] **Logging Estruturado:** Logs com contexto
+## 2. Configuração de Containers
 
-```php
-// Exemplo de Exception customizada
-class VotingException extends Exception
-{
-    public static function userAlreadyVoted(): self
-    {
-        return new self('User has already voted for this photo');
+### 2.1 Scripts de Inicialização
+
+**✅ FAZER:**
+- Usar shebang correto (`#!/bin/bash`)
+- Executar migrações antes de corrigir permissões
+- Criar diretórios necessários antes de iniciar serviços
+- Usar `exec` para o comando final
+
+```bash
+#!/bin/bash
+
+# Migrações
+php artisan migrate --force
+
+# Permissões
+chown www-data:www-data /var/www/html/database/database.sqlite
+
+# Diretórios
+mkdir -p /var/log/supervisor
+
+# Iniciar supervisor (último comando)
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+```
+
+**❌ NÃO FAZER:**
+- Usar shebang incorreto (`#!/bin/sh` quando usar bash features)
+- Corrigir permissões antes das migrações
+- Esquecer de criar diretórios necessários
+
+### 2.2 Supervisor Configuration
+
+**✅ FAZER:**
+- Definir usuário explicitamente para cada programa
+- Configurar logs apropriados
+- Usar `nodaemon=true` para containers
+- Configurar restart automático
+
+```ini
+[program:laravel-worker]
+command=php /var/www/html/artisan queue:work
+user=www-data
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/www/html/storage/logs/worker.log
+```
+
+**❌ NÃO FAZER:**
+- Omitir configuração de usuário
+- Usar daemon mode em containers
+- Ignorar configuração de logs
+
+### 2.3 Nginx Configuration
+
+**✅ FAZER:**
+- Definir usuário no início do arquivo
+- Configurar worker_processes apropriadamente
+- Usar fastcgi_pass correto para PHP-FPM
+
+```nginx
+user www-data;
+worker_processes auto;
+
+server {
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
     }
 }
 ```
 
-## 📊 Performance
+## 3. Processo de Deploy
 
-### Implementadas
-✅ **Eloquent Relationships:** Relacionamentos otimizados
-✅ **Vite Build:** Assets otimizados
-✅ **Database Indexing:** Índices nas chaves estrangeiras
+### 3.1 Ordem de Operações
 
-### Recomendadas
-- [ ] **Query Optimization:** Eager loading
-- [ ] **Caching:** Redis/Memcached
-- [ ] **CDN:** Assets estáticos
-- [ ] **Database Connection Pooling**
-
-```php
-// Exemplo de Eager Loading
-$photos = Photo::with(['votes', 'project'])->get();
-
-// Exemplo de Cache
-Cache::remember('photo_votes_' . $photo->id, 3600, function() use ($photo) {
-    return $photo->votes()->count();
-});
-```
-
-## 🧪 Testes
-
-### Implementadas
-✅ **Feature Tests:** Testes de autenticação funcionando
-✅ **CSRF Handling:** Middleware apropriado desabilitado em testes específicos
-✅ **Test Database:** SQLite em memória para testes
-✅ **User Factories:** Criação de dados de teste
-
-### Estrutura Atual
-```
-tests/
-├── Feature/             # Testes de integração
-│   └── Auth/           # Testes de autenticação
-│       ├── AuthenticationTest.php
-│       ├── EmailVerificationTest.php
-│       ├── PasswordConfirmationTest.php
-│       ├── PasswordResetTest.php
-│       ├── PasswordUpdateTest.php
-│       └── RegistrationTest.php ✅ Corrigido
-├── Unit/                # Testes unitários
-└── TestCase.php         # Configuração base
-```
-
-### Correções Implementadas
-✅ **RegistrationTest:** Resolvido problema de CSRF com `withoutMiddleware()`
-✅ **Validação SARAM:** Testes passando com SARAM de 7 dígitos
-✅ **Usuários de Teste:** Admin (1234567) e Voter (9876543) criados
-
-### Exemplo de teste unitário:
-```php
-class VotingServiceTest extends TestCase
-{
-    public function test_user_can_vote_for_photo()
-    {
-        $user = User::factory()->create();
-        $photo = Photo::factory()->create();
-        
-        $result = $this->votingService->vote($user->id, $photo->id);
-        
-        $this->assertTrue($result);
-        $this->assertDatabaseHas('votes', [
-            'user_id' => $user->id,
-            'photo_id' => $photo->id
-        ]);
-    }
-}
-```
-
-## 🎨 Frontend
-
-### Implementadas
-✅ **Component-Based Architecture:** Vue.js components
-✅ **Responsive Design:** Tailwind CSS
-✅ **State Management:** Inertia.js shared data
-✅ **Asset Optimization:** Vite bundling
-
-### Recomendadas
-- [ ] **TypeScript:** Type safety no frontend
-- [ ] **Component Testing:** Vue Test Utils
-- [ ] **Accessibility:** ARIA labels e navegação por teclado
-- [ ] **Progressive Enhancement:** Funcionalidade sem JavaScript
-
-```vue
-<!-- Exemplo de componente acessível -->
-<template>
-  <button 
-    @click="vote"
-    :aria-label="`Vote for photo ${photo.title}`"
-    :disabled="isVoting"
-    class="vote-button"
-  >
-    <span v-if="isVoting" aria-hidden="true">Voting...</span>
-    <span v-else>{{ hasVoted ? 'Unvote' : 'Vote' }}</span>
-  </button>
-</template>
-```
-
-## 📝 Documentação
-
-### Implementadas
-✅ **README:** Instruções de instalação
-✅ **Changelog:** Histórico de mudanças
-✅ **API Documentation:** Rotas documentadas
-✅ **Code Comments:** Comentários em código complexo
-
-### Estrutura de documentação:
-```
-docs/
-├── PROGRESSO_PROJETO.md    # Status atual
-├── STATUS_FUNCIONALIDADES.md # Funcionalidades testadas
-├── PROXIMOS_PASSOS.md      # Roadmap
-├── BOAS_PRATICAS.md        # Este arquivo
-└── API.md                  # Documentação da API
-```
-
-## 🔄 Controle de Versão
-
-### Git Flow Recomendado
-```bash
-# Feature branches
-git checkout -b feature/voting-system
-git checkout -b fix/type-error-auth-id
-git checkout -b docs/update-progress
-
-# Commits semânticos
-git commit -m "feat: add vote functionality"
-git commit -m "fix: resolve TypeError in VotingService"
-git commit -m "docs: update project progress"
-```
-
-### Convenção de Commits
-- `feat:` Nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Documentação
-- `style:` Formatação
-- `refactor:` Refatoração
-- `test:` Testes
-- `chore:` Manutenção
-
-## 🚀 Deploy e CI/CD
-
-### Recomendações
-- [ ] **GitHub Actions:** CI/CD automatizado
-- [ ] **Environment Variables:** Configurações por ambiente
-- [ ] **Database Migrations:** Versionamento do schema
-- [ ] **Zero Downtime Deploy:** Blue-green deployment
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.1
-      - name: Install dependencies
-        run: composer install
-      - name: Run tests
-        run: php artisan test
-```
-
-## 📊 Monitoramento
-
-### Logs Estruturados
-```php
-// Exemplo de log estruturado
-Log::info('User voted for photo', [
-    'user_id' => $userId,
-    'photo_id' => $photoId,
-    'timestamp' => now(),
-    'ip_address' => request()->ip()
-]);
-```
-
-### Métricas Recomendadas
-- [ ] **Response Time:** Tempo de resposta das APIs
-- [ ] **Error Rate:** Taxa de erros por endpoint
-- [ ] **User Activity:** Ações dos usuários
-- [ ] **Database Performance:** Queries lentas
-
-## 🔧 Configuração de Ambiente
-
-### Desenvolvimento
-```bash
-# .env.example
-APP_ENV=local
-APP_DEBUG=true
-DB_CONNECTION=sqlite
-CACHE_DRIVER=file
-QUEUE_CONNECTION=sync
-```
-
-### Produção
-```bash
-# .env.production
-APP_ENV=production
-APP_DEBUG=false
-DB_CONNECTION=mysql
-CACHE_DRIVER=redis
-QUEUE_CONNECTION=redis
-```
-
-## 🎯 Code Review
-
-### Checklist de Review
-- [ ] **Funcionalidade:** Código faz o que deveria fazer?
-- [ ] **Performance:** Há gargalos de performance?
-- [ ] **Segurança:** Há vulnerabilidades?
-- [ ] **Testes:** Funcionalidade está testada?
-- [ ] **Documentação:** Código está documentado?
-- [ ] **Padrões:** Segue padrões do projeto?
-
-### Exemplo de comentário de review:
-```php
-// ❌ Evitar
-public function vote($userId, $photoId) {
-    // Lógica complexa sem validação
-}
-
-// ✅ Preferir
-public function vote(int $userId, int $photoId): bool
-{
-    $this->validateVoteEligibility($userId, $photoId);
-    
-    return $this->createVote($userId, $photoId);
-}
-```
-
-## 🚀 Alterações em Produção
-
-### ⚠️ FLUXO OBRIGATÓRIO PARA ALTERAÇÕES EM PRODUÇÃO
-
-**SEMPRE siga este fluxo para qualquer mudança no projeto em produção:**
-
-#### 1. Alterar Arquivo Local
-```bash
-# Faça as alterações necessárias no arquivo local
-# Exemplo: resources/js/Pages/Profile/Edit.vue
-```
-
-#### 2. Alterar Arquivo no Container
-```bash
-# Acesse o container
-docker exec -it vote_app /bin/sh
-
-# Navegue até o arquivo ex:
-cd /var/www/html/resources/js/Pages/Profile/
-
-# Substitua o conteúdo usando cat
-cat > Edit.vue << 'EOF'
-[CONTEÚDO DO ARQUIVO ATUALIZADO]
-EOF
-```
-
-#### 3. Compilar Assets no Container
-```bash
-# SEMPRE execute o build após alterações em arquivos Vue/JS
-npm run build
-
-# Saia do container
-exit
-```
-
-### 📦 Dependências NPM
-
-#### Instalação com Conflitos de Dependências
-```bash
-# Use --legacy-peer-deps para resolver conflitos de versão
-npm install --legacy-peer-deps
-```
-
-**⚠️ IMPORTANTE:** Sempre use `--legacy-peer-deps` quando houver conflitos entre versões do Vite, Vue e outras dependências. Isso evita erros de resolução de dependências.
-
-#### Exemplo de Erro Comum:
-```
-npm error ERESOLVE could not resolve
-npm error peer vite@"^5.0.0 || ^6.0.0" from @vitejs/plugin-vue@5.2.4
-```
-
-**Solução:**
-```bash
-npm install --legacy-peer-deps
-```
-
-### 🔄 Checklist de Alterações em Produção
-
-- [ ] **1. Arquivo local alterado e salvo**
-- [ ] **2. Arquivo no container atualizado com `cat`**
-- [ ] **3. `npm run build` executado no container**
-- [ ] **4. Aplicação testada na porta 8011**
-- [ ] **5. Funcionalidade validada**
-
-### ⚡ Comandos Úteis para Produção
+**✅ SEQUÊNCIA CORRETA:**
+1. Build da imagem
+2. Stop do container anterior
+3. Start do novo container
+4. Aguardar inicialização (10-15s)
+5. Verificar health check
+6. Testar conectividade
+7. Verificar logs
 
 ```bash
-# Verificar status do container
-docker ps
-
-# Acessar container
-docker exec -it vote_app /bin/sh
-
-# Verificar se aplicação está rodando
-curl http://localhost:8011
-
-# Reiniciar container se necessário
-docker-compose restart
+# ✅ Processo completo
+docker-compose build app
+docker stop vote_app
+docker-compose up -d app
+sleep 15
+docker-compose ps
+curl -I http://localhost:8011
+docker logs vote_app --tail 10
 ```
 
-## 📚 Recursos e Referências
+### 3.2 Verificações Pós-Deploy
 
-### Laravel
-- [Laravel Documentation](https://laravel.com/docs)
-- [Laravel Best Practices](https://github.com/alexeymezenin/laravel-best-practices)
-- [PSR-12 Coding Standard](https://www.php-fig.org/psr/psr-12/)
+**✅ FAZER:**
+- Verificar status do container (`docker-compose ps`)
+- Verificar health check (`healthy` status)
+- Testar conectividade HTTP
+- Verificar logs para erros
+- Testar operações críticas
 
-### Vue.js
-- [Vue.js Style Guide](https://vuejs.org/style-guide/)
-- [Vue.js Best Practices](https://vuejs.org/guide/best-practices/)
+**❌ NÃO FAZER:**
+- Assumir que deploy funcionou sem verificar
+- Ignorar warnings nos logs
+- Pular testes de conectividade
 
-### Geral
-- [Clean Code Principles](https://github.com/ryanmcdermott/clean-code-javascript)
-- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-- [12 Factor App](https://12factor.net/)
+## 4. Debugging e Troubleshooting
 
----
+### 4.1 Coleta de Informações
 
-**Última atualização:** 25/09/2025 14:30  
-**Mantenha este documento atualizado conforme o projeto evolui.**
+**✅ FAZER:**
+- Coletar logs completos antes de fazer mudanças
+- Verificar permissões de arquivos críticos
+- Testar operações específicas que falharam
+- Documentar erros encontrados
+
+```bash
+# ✅ Coleta de informações
+docker logs vote_app --tail 50
+docker exec vote_app ls -la /var/www/html/database/
+docker exec vote_app ps aux
+```
+
+### 4.2 Resolução de Problemas
+
+**✅ FAZER:**
+- Identificar causa raiz antes de aplicar correções
+- Testar correções em ambiente isolado
+- Aplicar uma correção por vez
+- Verificar se correção resolve o problema
+
+**❌ NÃO FAZER:**
+- Aplicar múltiplas correções simultaneamente
+- Fazer mudanças sem entender o problema
+- Ignorar logs de erro
+
+## 5. Segurança
+
+### 5.1 Princípios Básicos
+
+**✅ FAZER:**
+- Usar usuários não-privilegiados para serviços
+- Aplicar princípio do menor privilégio
+- Manter permissões restritivas mas funcionais
+- Evitar executar como root
+
+**❌ NÃO FAZER:**
+- Usar `chmod 777` como solução
+- Rodar serviços como root desnecessariamente
+- Ignorar warnings de segurança
+
+### 5.2 Arquivos Sensíveis
+
+**✅ FAZER:**
+- Proteger arquivos de configuração (`.env`)
+- Restringir acesso ao banco de dados
+- Usar permissões apropriadas para logs
+
+```bash
+# ✅ Permissões seguras
+chmod 600 .env                    # Apenas owner pode ler/escrever
+chmod 664 database.sqlite         # Owner/group podem escrever, others apenas ler
+chmod 755 storage/logs/           # Diretório acessível mas protegido
+```
+
+## 6. Monitoramento
+
+### 6.1 Logs
+
+**✅ FAZER:**
+- Configurar rotação de logs
+- Monitorar logs de erro regularmente
+- Usar níveis de log apropriados
+- Centralizar logs quando possível
+
+### 6.2 Performance
+
+**✅ FAZER:**
+- Monitorar uso de recursos do container
+- Verificar performance de queries de banco
+- Monitorar tempo de resposta HTTP
+- Configurar alertas para problemas críticos
+
+```bash
+# ✅ Monitoramento básico
+docker stats vote_app
+docker exec vote_app top
+curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8011
+```
+
+## 7. Backup e Recovery
+
+### 7.1 Backup
+
+**✅ FAZER:**
+- Fazer backup regular do banco de dados
+- Versionar configurações importantes
+- Testar procedimentos de restore
+- Documentar processo de backup
+
+```bash
+# ✅ Backup do SQLite
+docker exec vote_app sqlite3 /var/www/html/database/database.sqlite ".backup /tmp/backup.sqlite"
+docker cp vote_app:/tmp/backup.sqlite ./backup-$(date +%Y%m%d).sqlite
+```
+
+### 7.2 Recovery
+
+**✅ FAZER:**
+- Ter plano de recovery documentado
+- Testar recovery em ambiente de teste
+- Manter backups em local seguro
+- Verificar integridade dos backups
+
+## 8. Documentação
+
+### 8.1 Manutenção da Documentação
+
+**✅ FAZER:**
+- Atualizar documentação após mudanças
+- Incluir exemplos práticos
+- Documentar problemas conhecidos e soluções
+- Manter histórico de mudanças
+
+**❌ NÃO FAZER:**
+- Deixar documentação desatualizada
+- Omitir detalhes importantes
+- Assumir conhecimento prévio do leitor
