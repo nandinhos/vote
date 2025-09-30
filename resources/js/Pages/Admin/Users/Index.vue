@@ -22,7 +22,7 @@
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <!-- Estatísticas -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <div class="flex items-center">
@@ -76,6 +76,46 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Já Votaram</dt>
+                                        <dd class="text-lg font-medium text-gray-900">{{ stats.users_voted }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Pendentes</dt>
+                                        <dd class="text-lg font-medium text-gray-900">{{ stats.users_pending }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tabela de Usuários -->
@@ -103,6 +143,14 @@
                                     <option value="admin">Administradores</option>
                                 </select>
                             </div>
+                            <div>
+                                <select v-model="statusFilter" @change="performSearch"
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Todos os status</option>
+                                    <option value="voted">Já Votaram</option>
+                                    <option value="pending">Pendentes</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Tabela -->
@@ -121,6 +169,10 @@
                                         <th
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Função
+                                        </th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
                                         </th>
                                         <th
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -147,6 +199,13 @@
                                                 {{ user.role === 'admin' ? 'Administrador' : 'Votante' }}
                                             </span>
                                         </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                             <span
+                                                 :class="user.voting_status === 'voted' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'"
+                                                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                                 {{ user.voting_status === 'voted' ? 'Já Votou' : 'Pendente' }}
+                                             </span>
+                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ new Date(user.created_at).toLocaleDateString('pt-BR') }}
                                         </td>
@@ -275,6 +334,7 @@ const props = defineProps({
 
 const search = ref(props.filters.search || '');
 const roleFilter = ref(props.filters.role || '');
+const statusFilter = ref(props.filters.status || '');
 const showDeleteModal = ref(false);
 const userToDelete = ref(null);
 
@@ -282,6 +342,7 @@ const performSearch = () => {
     router.get(route('admin.users.index'), {
         search: search.value,
         role: roleFilter.value,
+        status: statusFilter.value,
     }, {
         preserveState: true,
         replace: true,

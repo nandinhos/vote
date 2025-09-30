@@ -63,6 +63,15 @@
                 >
                     Fotos
                 </SidebarNavLink>
+                
+                <SidebarNavLink
+                    :href="route('admin.users.index')"
+                    :active="route().current('admin.users.*')"
+                    :collapsed="sidebarCollapsed"
+                    icon="users"
+                >
+                    Gerenciar Usuários
+                </SidebarNavLink>
             </nav>
 
             <!-- User Profile Section -->
@@ -222,6 +231,16 @@
                     @click="showMobileMenu = false"
                 >
                     Fotos
+                </SidebarNavLink>
+                
+                <SidebarNavLink
+                    :href="route('admin.users.index')"
+                    :active="route().current('admin.users.*')"
+                    :collapsed="false"
+                    icon="users"
+                    @click="showMobileMenu = false"
+                >
+                    Gerenciar Usuários
                 </SidebarNavLink>
             </nav>
 

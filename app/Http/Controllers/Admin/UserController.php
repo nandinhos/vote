@@ -18,11 +18,20 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->withCount('votes');
 
         // Filter by role if specified
         if ($request->has('role') && in_array($request->role, ['admin', 'voter'])) {
             $query->where('role', $request->role);
+        }
+
+        // Filter by voting status if specified
+        if ($request->has('status') && in_array($request->status, ['voted', 'pending'])) {
+            if ($request->status === 'voted') {
+                $query->has('votes');
+            } else {
+                $query->doesntHave('votes');
+            }
         }
 
         // Search by name or saram
@@ -37,13 +46,28 @@ class UserController extends Controller
                       ->paginate(15)
                       ->withQueryString();
 
+        // Add voting status to each user
+        $users->getCollection()->transform(function ($user) {
+            $user->voting_status = $user->votes_count > 0 ? 'voted' : 'pending';
+            return $user;
+        });
+
+        // Calculate statistics
+        $totalUsers = User::count();
+        $totalVoters = User::where('role', 'voter')->count();
+        $totalAdmins = User::where('role', 'admin')->count();
+        $usersWhoVoted = User::has('votes')->count();
+        $usersPending = User::doesntHave('votes')->count();
+
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'role']),
+            'filters' => $request->only(['search', 'role', 'status']),
             'stats' => [
-                'total_users' => User::count(),
-                'total_voters' => User::where('role', 'voter')->count(),
-                'total_admins' => User::where('role', 'admin')->count(),
+                'total_users' => $totalUsers,
+                'total_voters' => $totalVoters,
+                'total_admins' => $totalAdmins,
+                'users_voted' => $usersWhoVoted,
+                'users_pending' => $usersPending,
             ]
         ]);
     }
