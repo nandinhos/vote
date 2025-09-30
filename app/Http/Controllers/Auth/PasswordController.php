@@ -31,6 +31,12 @@ class PasswordController extends Controller
                            ->with('success', 'Senha alterada com sucesso!');
         }
 
+        // Check if user is voter to redirect to voting gallery
+        if ($request->user()->isVoter()) {
+            return redirect()->route('voting.gallery')
+                           ->with('success', 'Senha alterada com sucesso!');
+        }
+
         return back()->with('success', 'Senha alterada com sucesso!');
     }
 }
